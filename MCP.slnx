@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/LLM/">
+    <Project Path="LLM.OpenAI.Client/LLM.OpenAI.Client.csproj" />
+  </Folder>
+  <Folder Name="/Playground/">
+    <Project Path="ConsoleClient/ConsoleClient.csproj" />
+  </Folder>
+</Solution>
