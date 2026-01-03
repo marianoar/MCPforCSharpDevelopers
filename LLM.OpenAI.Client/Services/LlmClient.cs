@@ -65,6 +65,46 @@ namespace LLM.OpenAI.Client.Services
                 handleResponse($"Error: {ex.Message}");
             }
         }
+        public async Task<string> ChatAsync(IEnumerable<Message> context)
+        {
+            try
+            {
+                HttpClient httpClient = CreateHttpClient();
+
+                var request = BuildRequestBody(context, false);
+
+                var response = await httpClient.PostAsync(_options.RelativeEndpoint, request);
+
+                if(!response.IsSuccessStatusCode)
+                {
+                    string content = await response.Content.ReadAsStringAsync();
+                    return string.Format("Error: {0} - {1}: {2}", response.StatusCode, response.ReasonPhrase, content);
+                }
+
+                string jsonResponse =  await  response.Content.ReadAsStringAsync();
+
+                Console.WriteLine(jsonResponse);
+                Console.WriteLine(" -- -- - - -- -- - ********* ------------ ");
+                using var doc = JsonDocument.Parse(jsonResponse);
+
+                JsonElement root = doc.RootElement;
+
+                if(root.TryGetProperty("choices", out var choises) && choises.GetArrayLength()>0)
+                {
+                    JsonElement message = choises[0].GetProperty("message");
+                    if(message.TryGetProperty("content", out var content))
+                    {
+                        return content.GetString() ?? "";
+                    }
+                }
+
+                return "No content received from API";
+            }
+            catch (Exception ex)
+            {
+                return $"Error chat : {ex.Message}";
+            }
+        }
         public Message CreateSystemMessage(string content)
         {
             return new Message("system", content);
@@ -99,8 +139,8 @@ namespace LLM.OpenAI.Client.Services
                 [ "model"] =  _options.Model,
                 [ "stream"] = useStream,
                 [ "messages"] =  messages,
-                [ "temperature"] = 0.5,
-                ["max_completion_tokens"] = 4096,
+                [ "temperature"] = _options.Temperature,
+                ["max_completion_tokens"] = _options.MaxCompletionsTokens,
             };
 
             string json = JsonSerializer.Serialize(requestBody, s_jsonOptions);

@@ -28,14 +28,18 @@ var llmClient = app.GetRequiredService<LlmClient>();
 List<Message> context = [];
 
 context.Add(llmClient.CreateSystemMessage
-    ("... aqui va el system prompt ..."));
+    ("Eres un profesor de matematicas."));
 
-context.Add(llmClient.CreateUserMessage(" ... user prompt ... "));
+context.Add(llmClient.CreateUserMessage("Explica de manera breve, clara y concisa porque no se puede dividir por cero."));
 
-await llmClient.StreamChatAsync(context, response =>
-{
-    Console.Write(ChunckResponseProcessor.ProcessChunk(response));
-});
+//await llmClient.StreamChatAsync(context, response =>
+//{
+//    Console.WriteLine(ChunckResponseProcessor.ProcessChunk(response));
+//});
 
-Console.WriteLine();
+//Console.WriteLine();
+
+Console.WriteLine("Respuesta completa:");
+string response = await llmClient.ChatAsync(context);
+Console.WriteLine(response);
 
