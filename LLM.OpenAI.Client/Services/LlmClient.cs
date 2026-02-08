@@ -1,4 +1,5 @@
-﻿using LLM.OpenAI.Client.Models;
+﻿using LLM.Abstractions.Intefaces;
+using LLM.OpenAI.Client.Models;
 using LLM.OpenAI.Client.Options;
 using Microsoft.Extensions.Options;
 using Results;
@@ -9,7 +10,7 @@ using System.Text.Json;
 
 namespace LLM.OpenAI.Client.Services
 {
-    public class LlmClient
+    internal class LlmClient : ILlmClient
     {
         private static readonly JsonSerializerOptions s_jsonOptions = new()
         {
@@ -26,7 +27,7 @@ namespace LLM.OpenAI.Client.Services
             _options = options.Value;
         }
 
-        public async Task<Result> StreamChatAsync(List<Message> context, Action<string> handleResponse)
+        public async Task<Result> StreamChatAsync(List<IChatMessage> context, Action<string> handleResponse)
         {
             try
             {
@@ -73,7 +74,7 @@ namespace LLM.OpenAI.Client.Services
                 return Result.Fail($"Error: {ex.Message}");
             }
         }
-        public async Task<Result> ChatAsync(List<Message> context)
+        public async Task<Result> ChatAsync(List<IChatMessage> context)
         {
             try
             {
@@ -116,15 +117,15 @@ namespace LLM.OpenAI.Client.Services
                 return Result.Fail($"Error chat : {ex.Message}");
             }
         }
-        public Message CreateSystemMessage(string content)
+        public IChatMessage CreateSystemMessage(string content)
         {
             return new Message("system", content);
         }
-        public Message CreateUserMessage(string content)
+        public IChatMessage CreateUserMessage(string content)
         {
             return new Message("user", content);
         }
-        public Message CreateAssistantMessage(string content)
+        public IChatMessage CreateAssistantMessage(string content)
         {
             return new Message("assistant", content);
         }
@@ -143,13 +144,15 @@ namespace LLM.OpenAI.Client.Services
             return client;
         }
 
-        private StringContent BuildRequestBody(IEnumerable<Message> messages, bool useStream)
+        private StringContent BuildRequestBody(IEnumerable<IChatMessage> messages, bool useStream)
         {
+            var messageObjects =  messages.Select( m=> 
+                                    JsonSerializer.SerializeToElement( m, m.GetType(), s_jsonOptions)).ToArray();
             Dictionary<string, object> requestBody = new()
             {
                 [ "model"] =  _options.Model,
                 [ "stream"] = useStream,
-                [ "messages"] =  messages,
+                [ "messages"] =  messageObjects,
                 [ "temperature"] = _options.Temperature,
                 ["max_completion_tokens"] = _options.MaxCompletionsTokens,
             };

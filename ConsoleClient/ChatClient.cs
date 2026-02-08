@@ -1,18 +1,15 @@
-﻿using LLM.OpenAI.Client.Models;
-using LLM.OpenAI.Client.Services;
+﻿using LLM.Abstractions.Intefaces;
 using Results;
 
 namespace ConsoleClient
 {
-    internal class ChatClient(LlmClient llmClient)
+    internal class ChatClient(ILlmClient llmClient)
     {
         public async Task StartAsync()
         {
             try
             {
-
-
-                List<Message> context = [];
+                List<IChatMessage> context = [];
                 context.Add(llmClient.CreateSystemMessage(
                     @"Eres un profesor de Matematicas. Limita la conversacion a temas relacionados con las matematicas. Responde de manera breve, clara y concisa.
                   "));

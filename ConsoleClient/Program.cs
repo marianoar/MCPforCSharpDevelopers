@@ -1,5 +1,6 @@
 ﻿
 using ConsoleClient;
+using LLM.OpenAI.Client;
 using LLM.OpenAI.Client.Models;
 using LLM.OpenAI.Client.Options;
 using LLM.OpenAI.Client.Services;
@@ -10,22 +11,19 @@ using System;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
-builder.Services.AddHttpClient();
 //builder.Logging.AddFilter("System.Net.Http", LogLevel.Warning); en caso que quiera subir el nivel
-builder.Services.Configure<LlmOptions>(options =>
+builder.Services.AddOpenAIProvider(options =>
 {
     options.BaseUrl = "https://api.groq.com/";
     options.RelativeEndpoint = "openai/v1/chat/completions";
     options.Model = "moonshotai/kimi-k2-instruct-0905";
-    options.Timeout = TimeSpan.FromMinutes(2);
-
-    options.AuthenticationHeaderName = "Authorization";
+    //options.Timeout = TimeSpan.FromMinutes(2); estan en el default de las prop
+    //options.AuthenticationHeaderName = "Authorization";
     //Host toma las variables de ambiente como parte de la configuracion
     string apiKey = builder.Configuration["GroqApiKey"] ?? "";
     options.AuthenticationHeaderValue = $"Bearer {apiKey}";
 });
 
-builder.Services.AddSingleton<LlmClient>();
 builder.Services.AddSingleton<ChatClient>();
 
 var app = builder.Build();

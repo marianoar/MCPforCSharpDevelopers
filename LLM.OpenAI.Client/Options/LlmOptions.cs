@@ -12,7 +12,7 @@ namespace LLM.OpenAI.Client.Options
 
         public string RelativeEndpoint { get; set; } = "";
 
-        public TimeSpan? Timeout { get; set; } = TimeSpan.FromMinutes(3);
+        public TimeSpan? Timeout { get; set; } = TimeSpan.FromMinutes(5);
 
         public string AuthenticationHeaderName { get; set; } = "Authorization";
 
