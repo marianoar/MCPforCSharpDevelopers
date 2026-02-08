@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/LLM/">
+    <Project Path="LLM.Abstractions/LLM.Abstractions.csproj" Id="0fecdd75-755e-4fcb-abb9-e00a2d6ee1f2" />
     <Project Path="LLM.OpenAI.Client/LLM.OpenAI.Client.csproj" />
   </Folder>
   <Folder Name="/Playground/">

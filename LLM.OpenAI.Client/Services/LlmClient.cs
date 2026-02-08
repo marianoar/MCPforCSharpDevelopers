@@ -1,6 +1,7 @@
 ﻿using LLM.OpenAI.Client.Models;
 using LLM.OpenAI.Client.Options;
 using Microsoft.Extensions.Options;
+using Results;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -25,7 +26,7 @@ namespace LLM.OpenAI.Client.Services
             _options = options.Value;
         }
 
-        public async Task StreamChatAsync(IEnumerable<Message> context, Action<string> handleResponse)
+        public async Task<Result> StreamChatAsync(List<Message> context, Action<string> handleResponse)
         {
             try
             {
@@ -37,9 +38,8 @@ namespace LLM.OpenAI.Client.Services
                 if (!response.IsSuccessStatusCode)
                 {
                     string content = await response.Content.ReadAsStringAsync();
-                    handleResponse(string.Format("Error: {0} - {1}: {2}", response.StatusCode, response.ReasonPhrase, content));
-
-                    return;
+                    return Result.Fail(string.Format("Error: {0} - {1}: {2}", response.StatusCode, response.ReasonPhrase, content));
+                    
                 }
 
                 using var stream = await response.Content.ReadAsStreamAsync();
@@ -47,7 +47,9 @@ namespace LLM.OpenAI.Client.Services
 
                 string? line;
 
-                while((line = await reader.ReadLineAsync()) != null)
+                StringBuilder fullResponse = new StringBuilder();
+
+                while ((line = await reader.ReadLineAsync()) != null)
                 {
                     if (string.IsNullOrWhiteSpace(line))
                         continue;
@@ -56,16 +58,22 @@ namespace LLM.OpenAI.Client.Services
                     if (line == "[DONE]")
                         break;
 
-                    handleResponse(line);
+                    string content = ChunckResponseProcessor.ProcessChunk(line);
+                    fullResponse.Append(content);
+
+                    handleResponse(content);
                 }
+
+                context.Add(CreateAssistantMessage(fullResponse.ToString()));
+                return Result.Ok();
             }
             catch (Exception ex)
             {
 
-                handleResponse($"Error: {ex.Message}");
+                return Result.Fail($"Error: {ex.Message}");
             }
         }
-        public async Task<string> ChatAsync(IEnumerable<Message> context)
+        public async Task<Result> ChatAsync(List<Message> context)
         {
             try
             {
@@ -78,13 +86,13 @@ namespace LLM.OpenAI.Client.Services
                 if(!response.IsSuccessStatusCode)
                 {
                     string content = await response.Content.ReadAsStringAsync();
-                    return string.Format("Error: {0} - {1}: {2}", response.StatusCode, response.ReasonPhrase, content);
+                    return Result.Fail(string.Format("Error: {0} - {1}: {2}", response.StatusCode, response.ReasonPhrase, content));
                 }
 
                 string jsonResponse =  await  response.Content.ReadAsStringAsync();
 
-                Console.WriteLine(jsonResponse);
-                Console.WriteLine(" -- -- - - -- -- - ********* ------------ ");
+                //Console.WriteLine(jsonResponse);
+                //Console.WriteLine(" -- -- - - -- -- - ********* ------------ ");
                 using var doc = JsonDocument.Parse(jsonResponse);
 
                 JsonElement root = doc.RootElement;
@@ -94,15 +102,18 @@ namespace LLM.OpenAI.Client.Services
                     JsonElement message = choises[0].GetProperty("message");
                     if(message.TryGetProperty("content", out var content))
                     {
-                        return content.GetString() ?? "";
+                        string fullResponse = content.GetString() ?? "";
+                        context.Add(CreateAssistantMessage(fullResponse));
+
+                        return Result.Ok();
                     }
                 }
 
-                return "No content received from API";
+                return Result.Fail("No content received from API");
             }
             catch (Exception ex)
             {
-                return $"Error chat : {ex.Message}";
+                return Result.Fail($"Error chat : {ex.Message}");
             }
         }
         public Message CreateSystemMessage(string content)

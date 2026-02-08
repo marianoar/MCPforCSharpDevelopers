@@ -1,13 +1,18 @@
 ﻿
+using ConsoleClient;
 using LLM.OpenAI.Client.Models;
 using LLM.OpenAI.Client.Options;
 using LLM.OpenAI.Client.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using System;
 
-IServiceCollection services = new ServiceCollection();
+HostApplicationBuilder builder = Host.CreateApplicationBuilder();
 
-services.AddHttpClient();
-services.Configure<LlmOptions>(options =>
+builder.Services.AddHttpClient();
+//builder.Logging.AddFilter("System.Net.Http", LogLevel.Warning); en caso que quiera subir el nivel
+builder.Services.Configure<LlmOptions>(options =>
 {
     options.BaseUrl = "https://api.groq.com/";
     options.RelativeEndpoint = "openai/v1/chat/completions";
@@ -15,22 +20,25 @@ services.Configure<LlmOptions>(options =>
     options.Timeout = TimeSpan.FromMinutes(2);
 
     options.AuthenticationHeaderName = "Authorization";
-    string apiKey = Environment.GetEnvironmentVariable("GroqApiKey") ?? "";
+    //Host toma las variables de ambiente como parte de la configuracion
+    string apiKey = builder.Configuration["GroqApiKey"] ?? "";
     options.AuthenticationHeaderValue = $"Bearer {apiKey}";
 });
 
-services.AddSingleton<LlmClient>();
+builder.Services.AddSingleton<LlmClient>();
+builder.Services.AddSingleton<ChatClient>();
 
-var app = services.BuildServiceProvider();
+var app = builder.Build();
 
-var llmClient = app.GetRequiredService<LlmClient>();
+//var llmClient = app.Services.GetRequiredService<LlmClient>();
+var chatClient = app.Services.GetRequiredService<ChatClient>();
 
-List<Message> context = [];
+//List<Message> context = [];
 
-context.Add(llmClient.CreateSystemMessage
-    ("Eres un profesor de matematicas."));
+//context.Add(llmClient.CreateSystemMessage
+//    ("Eres un profesor de matematicas."));
 
-context.Add(llmClient.CreateUserMessage("Explica de manera breve, clara y concisa porque no se puede dividir por cero."));
+//context.Add(llmClient.CreateUserMessage("Explica de manera breve, clara y concisa porque no se puede dividir por cero."));
 
 //await llmClient.StreamChatAsync(context, response =>
 //{
@@ -39,7 +47,9 @@ context.Add(llmClient.CreateUserMessage("Explica de manera breve, clara y concis
 
 //Console.WriteLine();
 
-Console.WriteLine("Respuesta completa:");
-string response = await llmClient.ChatAsync(context);
-Console.WriteLine(response);
+
+//string response = await llmClient.ChatAsync(context);
+
+await chatClient.StartAsync();
+
 
