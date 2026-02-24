@@ -10,6 +10,5 @@ namespace LLM.Abstractions.Models
         public string MessageId => messageId;
         public string Tool => tool;
         public JsonElement Arguments => arguments;
-    {
     }
 }
