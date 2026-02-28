@@ -27,7 +27,7 @@ namespace LLM.OpenAI.Client.Services
             _options = options.Value;
         }
 
-        public async Task<Result> StreamChatAsync(List<IChatMessage> context, Action<string> handleResponse)
+        public async Task<Result<string>> StreamChatAsync(List<IChatMessage> context, Action<string> handleResponse)
         {
             try
             {
@@ -74,7 +74,7 @@ namespace LLM.OpenAI.Client.Services
                 return Result.Fail($"Error: {ex.Message}");
             }
         }
-        public async Task<Result> ChatAsync(List<IChatMessage> context)
+        public async Task<Result<string>> ChatAsync(List<IChatMessage> context)
         {
             try
             {
