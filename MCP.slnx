@@ -5,5 +5,6 @@
   </Folder>
   <Folder Name="/Playground/">
     <Project Path="ConsoleClient/ConsoleClient.csproj" />
+    <Project Path="ToolProviders/ToolProviders.csproj" Id="67b18357-a3b8-4fbc-b751-d52f0f9e61e8" />
   </Folder>
 </Solution>

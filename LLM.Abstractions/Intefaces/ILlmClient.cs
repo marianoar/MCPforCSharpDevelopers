@@ -4,9 +4,9 @@ namespace LLM.Abstractions.Intefaces
 {
     public interface ILlmClient
     {
-        Task<Result> StreamChatAsync(List<IChatMessage> context, Action<string> handleResponse);
+        Task<Result<string>> StreamChatAsync(List<IChatMessage> context, Action<string> handleResponse);
 
-        Task<Result> ChatAsync(List<IChatMessage> context);
+        Task<Result<string>> ChatAsync(List<IChatMessage> context);
 
         IChatMessage CreateAssistantMessage(string content);
         IChatMessage CreateSystemMessage(string content);

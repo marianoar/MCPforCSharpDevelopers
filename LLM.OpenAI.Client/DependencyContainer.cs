@@ -14,6 +14,12 @@ namespace LLM.OpenAI.Client
             services.AddSingleton<ILlmClient, LlmClient>();
             services.Configure(configureOptions);
 
+            services.AddSingleton<LlmHttpClient>();
+            services.AddSingleton<ToolCallHandler>();
+            services.AddSingleton<RequestBuilder>();
+            services.AddSingleton<ResponseHandler>();
+            services.AddSingleton<StreamResponseHandler>();
+
             return services;
         }
 
